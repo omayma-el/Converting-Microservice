@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: Currency Conversion API
+  description: API for converting currencies and retrieving exchange rates.
+  version: 1.0.0
+servers:
+  - description : Production
+    url: 'https://yourcurrencyconverter-api.cz'
+  - description : Test
+    url: 'https://yourcurrencyconverter-api-test.cz'
+tags:
+  - name: Currency
+    description: Operations about currency conversion and exchange rates
+paths:
+  /exchange-rate:
+    get:
+      tags:
+        - Currency
+      summary: Get exchange rate
+      description: Retrieves the exchange rate between two currencies
+      operationId: getExchangeRate
+      parameters:
+        - name: from
+          in: query
+          description: Currency code to convert from
+          required: true
+          schema:
+            type: string
+            example: USD
+        - name: to
+          in: query
+          description: Currency code to convert to
+          required: true
+          schema:
+            type: string
+            example: EUR
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRate'
+        '400':
+          description: Invalid input
+        '404':
+          description: Currency not found
+  /convert:
+    post:
+      tags:
+        - Currency
+      summary: Calculate currency
+      description: Calculate currency with given input array
+      operationId: calculateCurrencyWithListInput
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConversionQuery'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionResult'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ConversionResult'
+        default:
+          description: successful operation
+components:
+  schemas:
+    ConversionResult:
+      type: object
+      properties:
+        from:
+          type: string
+          example: USD
+        to:
+          type: string
+          example: EUR
+        amount:
+          type: number
+          example: 100.0
+        convertedAmount:
+          type: number
+          example: 85.0
+        exchangeRate:
+          type: number
+          example: 0.85
+    ConversionQuery:
+      type: object
+      properties:
+        from:
+          type: string
+          example: USD
+        to:
+          type: string
+          example: EUR
+        amount:
+          type: number
+          example: 100.0
+        exchangeRate:
+          type: number
+          example: 0.85
+    ExchangeRate:
+      type: object
+      properties:
+        from:
+          type: string
+          example: USD
+        to:
+          type: string
+          example: EUR
+        rate:
+          type: number
+          example: 0.85
+    Exchange:
+      type: object
+      properties:
+        from:
+          type: string
+          example: USD
+        to:
+          type: string
+          example: EUR
