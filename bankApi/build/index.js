@@ -20,9 +20,7 @@ const app = (0, express_1.default)();
 const port = 3000;
 // Calcular la fecha de hoy menos un día
 const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
-const START_DATE = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd'); // Formatear la fecha como string 'yyyy-MM-dd'
-// Constante para el código de moneda
-const CURRENCY_CODE = 'AUD'; // Puedes cambiar este valor a cualquier otro código de moneda que desees
+const START_DATE = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd');
 // Configurar el parser de xml2js
 const parser = new xml2js_1.Parser({ explicitArray: false });
 // Función para obtener el valor de cambio desde la API del ECB
@@ -38,7 +36,7 @@ const fetchObsValue = (currencyCode) => __awaiter(void 0, void 0, void 0, functi
         });
         const result = yield parser.parseStringPromise(response.data);
         const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
-        return obsValue;
+        return parseFloat(obsValue);
     }
     catch (error) {
         console.error('Error fetching exchange rate:', error);
@@ -46,23 +44,54 @@ const fetchObsValue = (currencyCode) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 // Endpoint GET /exchange-rate
-app.get('/exchange-rate', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get('/exchange-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { from } = req.query;
+    if (!from) {
+        return res.status(400).json({ error: 'Currency code "from" is required as a query parameter' });
+    }
     try {
         // Obtener el valor de la tasa de cambio desde la API externa
-        const obsValue = yield fetchObsValue(CURRENCY_CODE);
-        if (!obsValue) {
+        const rate = yield fetchObsValue(from);
+        if (!rate) {
             return res.status(404).json({ error: 'Exchange rate not found' });
         }
         // Responder con el valor de la tasa de cambio
         return res.json({
-            from: CURRENCY_CODE,
-            to: 'EUR',
-            rate: parseFloat(obsValue)
+            from: from,
+            to: 'EUR', // EUR es el valor de 'to' en la solicitud a la API externa
+            rate: rate
         });
     }
     catch (error) {
         console.error('Error fetching exchange rate:', error);
         return res.status(500).send('Error fetching exchange rate');
+    }
+}));
+// Endpoint POST /convert
+app.post('/convert', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { from, to, amount } = req.body;
+    if (!from || !to || !amount) {
+        return res.status(400).json({ error: 'Missing required fields in request body: "from", "to", "amount"' });
+    }
+    try {
+        // Obtener el valor de la tasa de cambio desde la API externa (solo se necesita 'from')
+        const rate = yield fetchObsValue(from);
+        if (!rate) {
+            return res.status(404).json({ error: 'Exchange rate not found' });
+        }
+        const convertedAmount = amount * rate;
+        // Responder con el resultado de la conversión
+        return res.json({
+            from: from,
+            to: to,
+            amount: amount,
+            convertedAmount: convertedAmount,
+            exchangeRate: rate
+        });
+    }
+    catch (error) {
+        console.error('Error converting currency:', error);
+        return res.status(500).send('Error converting currency');
     }
 }));
 // Iniciar el servidor
