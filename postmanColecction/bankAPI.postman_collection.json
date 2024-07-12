@@ -1,0 +1,281 @@
+{
+	"info": {
+		"_postman_id": "cf56cd6c-9089-4445-a49a-0ea1970ea9e5",
+		"name": "bankAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36951560"
+	},
+	"item": [
+		{
+			"name": "getDataHappyPath",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let fromValueTest = pm.environment.get(\"fromValues\");",
+							"let toValueTest = pm.environment.get(\"toValues\");",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"let fromValue = pm.variables.get(\"from\");",
+							"pm.test(\"Assert of from value\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.from).to.eql(fromValueTest);",
+							"});",
+							"",
+							"pm.test(\"Assert of to value\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.to).to.eql(\"EUR\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://{{baseUrl}}:{{port}}/exchange-rate?from={{fromValues}}&to={{toValues}}",
+					"protocol": "http",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"exchange-rate"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "{{fromValues}}"
+						},
+						{
+							"key": "to",
+							"value": "{{toValues}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "errorMessageIncorectCurrencyOption",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"let fromValueTest = \"Exchange rate not found\";",
+							"pm.test(\"Assert of error message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.error).to.eql(fromValueTest);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://{{baseUrl}}:{{port}}/exchange-rate?from=COR&to={{toValues}}",
+					"protocol": "http",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"exchange-rate"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "COR"
+						},
+						{
+							"key": "to",
+							"value": "{{toValues}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "convertAmountHappyPath",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let fromValueTest = pm.environment.get(\"fromValues\");",
+							"let toValueTest = pm.environment.get(\"toValues\");",
+							"let amountTest = Number(pm.environment.get(\"amount\"))",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"let fromValue = pm.variables.get(\"from\");",
+							"pm.test(\"Assert of from value\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.from).to.eql(fromValueTest);",
+							"});",
+							"",
+							"pm.test(\"Assert of to value\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.to).to.eql(\"EUR\");",
+							"});",
+							"",
+							"pm.test(\"Assert of amount\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.amount).to.eql(amountTest);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"from\": \"{{fromValues}}\",\n  \"to\": \"{{toValues}}\",\n  \"amount\": {{amount}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{baseUrl}}:{{port}}/convert",
+					"protocol": "http",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"convert"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "errorMessageIncorectCurrencyOption",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"let fromValueTest = \"Exchange rate not found\";",
+							"pm.test(\"Assert of error message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.error).to.eql(fromValueTest);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"from\": \"ERROR\",\n  \"to\": \"{{toValues}}\",\n  \"amount\": {{amount}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{baseUrl}}:{{port}}/convert",
+					"protocol": "http",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"convert"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"value": "",
+			"type": "string"
+		}
+	]
+}
