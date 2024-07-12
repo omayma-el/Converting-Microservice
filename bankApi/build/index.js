@@ -18,31 +18,35 @@ const xml2js_1 = require("xml2js");
 const date_fns_1 = require("date-fns");
 const app = (0, express_1.default)();
 const port = 3000;
-// Calcular la fecha de hoy menos un día
+// Calcular la fecha de ayer
 const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
 const START_DATE = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd');
 // Configurar el parser de xml2js
 const parser = new xml2js_1.Parser({ explicitArray: false });
-// Función para obtener el valor de cambio desde la API del ECB
-const fetchObsValue = (currencyCode) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield axios_1.default.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${currencyCode}.EUR.SP00.A`, {
-            params: {
-                startPeriod: START_DATE
-            },
-            headers: {
-                'Accept': 'application/xml'
-            }
-        });
-        const result = yield parser.parseStringPromise(response.data);
-        const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
-        return parseFloat(obsValue);
-    }
-    catch (error) {
-        console.error('Error fetching exchange rate:', error);
-        return undefined;
-    }
-});
+// Función para obtener la tasa de cambio desde la API del ECB
+function fetchObsValue(currencyCode) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield axios_1.default.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${currencyCode}.EUR.SP00.A`, {
+                params: {
+                    startPeriod: START_DATE
+                },
+                headers: {
+                    'Accept': 'application/xml'
+                }
+            });
+            const result = yield parser.parseStringPromise(response.data);
+            const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
+            return parseFloat(obsValue);
+        }
+        catch (error) {
+            console.error('Error fetching exchange rate:', error);
+            return undefined;
+        }
+    });
+}
+// Middleware para parsear JSON en las solicitudes POST
+app.use(express_1.default.json());
 // Endpoint GET /exchange-rate
 app.get('/exchange-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { from } = req.query;
@@ -82,10 +86,10 @@ app.post('/convert', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const convertedAmount = amount * rate;
         // Responder con el resultado de la conversión
         return res.json({
-            from: from,
-            to: to,
-            amount: amount,
-            convertedAmount: convertedAmount,
+            from,
+            to,
+            amount,
+            convertedAmount,
             exchangeRate: rate
         });
     }
