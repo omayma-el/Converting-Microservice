@@ -18,12 +18,12 @@ const xml2js_1 = require("xml2js");
 const date_fns_1 = require("date-fns");
 const app = (0, express_1.default)();
 const port = 3000;
-// Calcular la fecha de ayer
+// Calculate yesterday's date
 const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
 const START_DATE = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd');
-// Configurar el parser de xml2js
+// Configure the xml2js parser
 const parser = new xml2js_1.Parser({ explicitArray: false });
-// Función para obtener la tasa de cambio desde la API del ECB
+// Function to get the exchange rate from the ECB API
 function fetchObsValue(currencyCode) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -35,9 +35,9 @@ function fetchObsValue(currencyCode) {
                     'Accept': 'application/xml'
                 }
             });
-            console.log('API response:', response.data); // Mostrar la respuesta de la API externa en la consola
+            console.log('API response:', response.data); // Show the external API response in the console
             const result = yield parser.parseStringPromise(response.data);
-            // Extraer el valor más reciente de generic:Obs > generic:ObsValue
+            // Extract the most recent value from generic:Obs > generic:ObsValue
             const series = result['message:GenericData']['message:DataSet']['generic:Series'];
             const observations = series['generic:Obs'];
             const mostRecentObs = Array.isArray(observations) ? observations[observations.length - 1] : observations;
@@ -50,24 +50,24 @@ function fetchObsValue(currencyCode) {
         }
     });
 }
-// Middleware para parsear JSON en las solicitudes POST
+// Middleware to parse JSON in POST requests
 app.use(express_1.default.json());
-// Endpoint GET /exchange-rate
+// GET /exchange-rate endpoint
 app.get('/exchange-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { from } = req.query;
     if (!from) {
         return res.status(400).json({ error: 'Currency code "from" is required as a query parameter' });
     }
     try {
-        // Obtener el valor de la tasa de cambio desde la API externa
+        // Get the exchange rate value from the external API
         const rate = yield fetchObsValue(from);
         if (!rate) {
             return res.status(404).json({ error: 'Exchange rate not found' });
         }
-        // Responder con el valor de la tasa de cambio
+        // Respond with the exchange rate value
         return res.json({
             from: from,
-            to: 'EUR', // EUR es el valor de 'to' en la solicitud a la API externa
+            to: 'EUR', // EUR is the value of 'to' in the external API request
             rate: rate
         });
     }
@@ -76,20 +76,20 @@ app.get('/exchange-rate', (req, res) => __awaiter(void 0, void 0, void 0, functi
         return res.status(500).send('Error fetching exchange rate');
     }
 }));
-// Endpoint POST /convert
+// POST /convert endpoint
 app.post('/convert', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { from, to, amount } = req.body;
     if (!from || !to || !amount) {
         return res.status(400).json({ error: 'Missing required fields in request body: "from", "to", "amount"' });
     }
     try {
-        // Obtener el valor de la tasa de cambio desde la API externa (solo se necesita 'from')
+        // Get the exchange rate value from the external API (only 'from' is needed)
         const rate = yield fetchObsValue(from);
         if (!rate) {
             return res.status(404).json({ error: 'Exchange rate not found' });
         }
         const convertedAmount = amount * rate;
-        // Responder con el resultado de la conversión
+        // Respond with the conversion result
         return res.json({
             from,
             to,
@@ -103,7 +103,7 @@ app.post('/convert', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return res.status(500).send('Error converting currency');
     }
 }));
-// Iniciar el servidor
+// Start the server
 app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+    console.log(`Server listening on http://localhost:${port}`);
 });
