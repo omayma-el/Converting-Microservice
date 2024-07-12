@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Dependencias locales (puedes especificar otros gestores de paquetes aquí)
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+
+# IDEs and Editors
+.vscode/
+.idea/
+
+# Compiled output (puede variar según tu entorno de desarrollo)
+dist/
+out/
+
+# Sensitive or high-churn files
+*.pem
+
+# Dependency directories
+jspm_packages/
+bower_components/
+
+# Typescript
+*.tsbuildinfo
+
+# Optional eslint cache
+.eslintcache
+
+# Optional lerna.js (monorepo tool)
+lerna-debug.log
+
+# Optional parcel-bundler cache and cache directory
+.cache/
+.parcel-cache/
+
+# Optional next.js build directory
+.next/
