@@ -35,8 +35,13 @@ function fetchObsValue(currencyCode) {
                     'Accept': 'application/xml'
                 }
             });
+            console.log('API response:', response.data); // Mostrar la respuesta de la API externa en la consola
             const result = yield parser.parseStringPromise(response.data);
-            const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
+            // Extraer el valor más reciente de generic:Obs > generic:ObsValue
+            const series = result['message:GenericData']['message:DataSet']['generic:Series'];
+            const observations = series['generic:Obs'];
+            const mostRecentObs = Array.isArray(observations) ? observations[observations.length - 1] : observations;
+            const obsValue = mostRecentObs['generic:ObsValue']['$']['value'];
             return parseFloat(obsValue);
         }
         catch (error) {
