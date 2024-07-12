@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
-import { Parser } from 'xml2js'; // Asegúrate de importar el Parser desde xml2js
-import { format, subDays } from 'date-fns'; // Importa las funciones necesarias de date-fns
+import { Parser } from 'xml2js';
+import { format, subDays } from 'date-fns';
 
 const app = express();
 const port = 3000;
@@ -16,10 +16,10 @@ const CURRENCY_CODE = 'AUD'; // Puedes cambiar este valor a cualquier otro códi
 // Configurar el parser de xml2js
 const parser = new Parser({ explicitArray: false });
 
-// Endpoint GET /external-api
-app.get('/external-api', async (_req: Request, res: Response) => {
+// Función para obtener el valor de cambio desde la API del ECB
+const fetchObsValue = async (currencyCode: string): Promise<string | undefined> => {
   try {
-    const response = await axios.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${CURRENCY_CODE}.EUR.SP00.A`, {
+    const response = await axios.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${currencyCode}.EUR.SP00.A`, {
       params: {
         startPeriod: START_DATE
       },
@@ -28,26 +28,37 @@ app.get('/external-api', async (_req: Request, res: Response) => {
       }
     });
 
-    // Convertir la respuesta XML a JSON
-    parser.parseString(response.data, (err: any, result: any) => {
-      if (err) {
-        console.error('Error al convertir XML a JSON:', err);
-        res.status(500).send('Error al convertir XML a JSON');
-      } else {
-        // Acceder al valor de generic:ObsValue
-        const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
-
-        // Enviar solo el valor de generic:ObsValue como respuesta JSON
-        res.json({ value: obsValue });
-      }
-    });
-
+    const result = await parser.parseStringPromise(response.data);
+    const obsValue = result['message:GenericData']['message:DataSet']['generic:Series']['generic:Obs']['generic:ObsValue']['$']['value'];
+    return obsValue;
   } catch (error) {
-    console.error('Error al hacer la solicitud a la API externa:', error);
-    res.status(500).send('Error al hacer la solicitud a la API externa');
+    console.error('Error fetching exchange rate:', error);
+    return undefined;
+  }
+};
+
+// Endpoint GET /exchange-rate
+app.get('/exchange-rate', async (_req: Request, res: Response) => {
+  try {
+    // Obtener el valor de la tasa de cambio desde la API externa
+    const obsValue = await fetchObsValue(CURRENCY_CODE);
+    if (!obsValue) {
+      return res.status(404).json({ error: 'Exchange rate not found' });
+    }
+
+    // Responder con el valor de la tasa de cambio
+    return res.json({
+      from: CURRENCY_CODE,
+      to: 'EUR',
+      rate: parseFloat(obsValue)
+    });
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    return res.status(500).send('Error fetching exchange rate');
   }
 });
 
+// Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
 });
