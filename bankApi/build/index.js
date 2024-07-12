@@ -15,15 +15,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const axios_1 = __importDefault(require("axios"));
 const xml2js_1 = require("xml2js"); // Asegúrate de importar el Parser desde xml2js
+const date_fns_1 = require("date-fns"); // Importa las funciones necesarias de date-fns
 const app = (0, express_1.default)();
 const port = 3000;
+// Calcular la fecha de hoy menos un día
+const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
+const START_DATE = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd'); // Formatear la fecha como string 'yyyy-MM-dd'
+// Constante para el código de moneda
+const CURRENCY_CODE = 'AUD'; // Puedes cambiar este valor a cualquier otro código de moneda que desees
 // Configurar el parser de xml2js
 const parser = new xml2js_1.Parser({ explicitArray: false });
+// Endpoint GET /external-api
 app.get('/external-api', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const response = yield axios_1.default.get('https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.AUD.EUR.SP00.A', {
+        const response = yield axios_1.default.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${CURRENCY_CODE}.EUR.SP00.A`, {
             params: {
-                startPeriod: '2024-07-11'
+                startPeriod: START_DATE
             },
             headers: {
                 'Accept': 'application/xml'

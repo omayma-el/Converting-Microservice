@@ -1,18 +1,27 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { Parser } from 'xml2js'; // Asegúrate de importar el Parser desde xml2js
+import { format, subDays } from 'date-fns'; // Importa las funciones necesarias de date-fns
 
 const app = express();
 const port = 3000;
 
+// Calcular la fecha de hoy menos un día
+const yesterday = subDays(new Date(), 1);
+const START_DATE = format(yesterday, 'yyyy-MM-dd'); // Formatear la fecha como string 'yyyy-MM-dd'
+
+// Constante para el código de moneda
+const CURRENCY_CODE = 'AUD'; // Puedes cambiar este valor a cualquier otro código de moneda que desees
+
 // Configurar el parser de xml2js
 const parser = new Parser({ explicitArray: false });
 
+// Endpoint GET /external-api
 app.get('/external-api', async (_req: Request, res: Response) => {
   try {
-    const response = await axios.get('https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.AUD.EUR.SP00.A', {
+    const response = await axios.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${CURRENCY_CODE}.EUR.SP00.A`, {
       params: {
-        startPeriod: '2024-07-11'
+        startPeriod: START_DATE
       },
       headers: {
         'Accept': 'application/xml'
