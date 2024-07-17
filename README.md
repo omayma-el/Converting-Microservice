@@ -11,3 +11,4 @@ Here is the URL to access swagger editor : https://editor-next.swagger.io/
 ## Constants
 BankAPI port : 3000
 Frontend Server port : 3001
+Calculation Service port : 3002
