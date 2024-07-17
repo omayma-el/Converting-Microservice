@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group select, .input-group input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Currency Converter</h2>
+    <div class="input-group">
+        <label for="fromCurrency">From Currency:</label>
+        <select id="fromCurrency"></select>
+    </div>
+    <div class="input-group">
+        <label for="toCurrency">To Currency:</label>
+        <select id="toCurrency"></select>
+    </div>
+    <div class="input-group">
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" placeholder="Enter amount">
+    </div>
+    <button onclick="convertCurrency()">Convert</button>
+    <div id="result"></div>
+</div>
+
+<script>
+    const currencyList = {
+        "Algerian dinar" : "DZD",
+        "Argentine peso" : "ARS",
+        "Australian dollar" : "AUD",
+        "Austrian schilling" : "ATS",
+        "Belgian franc" : "BEF",
+        "Brazilian real" : "BRL",
+        "Bulgarian lev" : "BGN",
+        "Canadian dollar" : "CAD",
+        "Chinese yuan renminbi" : "CNY",
+        "Croatian kuna" : "HRK",
+        "Cyprus pound" : "CYP",
+        "Czech koruna" : "CZK",
+        "Danish krone" : "DKK",
+        "Estonian kroon" : "EEK",
+        "Finnish markka" : "FIM",
+        "French franc" : "FRF",
+        "German mark" : "DEM",
+        "Greek drachma" : "GRD",
+        "Hong Kong dollar" : "HKD",
+        "Hungarian forint" : "HUF",
+        "Iceland krona" : "ISK",
+        "Indian rupee" : "INR",
+        "Indonesian rupiah" : "IDR",
+        "Irish pound" : "IEP",
+        "Israeli shekel" : "ILS",
+        "Italian lira" : "ITL",
+        "Japanese yen" : "JPY",
+        "Korean won (Republic)" : "KRW",
+        "Latvian lats" : "LVL",
+        "Lithuanian litas" : "LTL",
+        "Luxembourg franc" : "LUF",
+        "Malaysian ringgit" : "MYR",
+        "Maltese lira" : "MTL",
+        "Mexican peso" : "MXN",
+        "Moroccan dirham" : "MAD",
+        "Netherlands guilder" : "NLG",
+        "New Taiwan dollar" : "TWD",
+        "New Zealand dollar" : "NZD",
+        "Norwegian krone" : "NOK",
+        "Philippine peso" : "PHP",
+        "Polish zloty" : "PLN",
+        "Portuguese escudo" : "PTE",
+        "Romanian leu" : "RON",
+        "Russian rouble" : "RUB",
+        "Singapore dollar" : "SGD",
+        "Slovak koruna" : "SKK",
+        "Slovenian tolar" : "SIT",
+        "South African rand" : "ZAR",
+        "Spanish peseta" : "ESP",
+        "Swedish krona" : "SEK",
+        "Swiss franc" : "CHF",
+        "Thai baht" : "THB",
+        "Turkish lira" : "TRY",
+        "UK pound sterling" : "GBP",
+        "US dollar" : "USD"
+    };
+
+    const fromCurrencySelect = document.getElementById("fromCurrency");
+    const toCurrencySelect = document.getElementById("toCurrency");
+
+    for (const [currency, code] of Object.entries(currencyList)) {
+        let option = document.createElement("option");
+        option.value = code;
+        option.text = `${currency} (${code})`;
+        fromCurrencySelect.add(option);
+
+        option = document.createElement("option");
+        option.value = code;
+        option.text = `${currency} (${code})`;
+        toCurrencySelect.add(option);
+    }
+
+    function convertCurrency() {
+        let fromCurrency = document.getElementById("fromCurrency").value;
+        let toCurrency = document.getElementById("toCurrency").value;
+        let amount = document.getElementById("amount").value;
+
+        // Placeholder logic for conversion (implement actual logic as needed)
+        let conversionRate = 1; // Example: define your conversion rate logic here
+        let convertedAmount = amount * conversionRate;
+
+        document.getElementById("result").innerText = `Converted Amount: ${convertedAmount} ${toCurrency}`;
+    }
+</script>
+</body>
+</html>
