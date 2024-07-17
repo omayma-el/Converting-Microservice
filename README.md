@@ -6,3 +6,8 @@ Here is the link to modify the app diagram : https://drive.google.com/file/d/1CS
 
 ## API Documentation
 Here is the URL to access swagger editor : https://editor-next.swagger.io/
+
+
+## Constants
+BankAPI port : 3000
+Frontend Server port : 3001
