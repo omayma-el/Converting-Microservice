@@ -49,7 +49,7 @@ app.use(express.json());
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: 'http://localhost:3001', // Replace with your front-end URL
+  origin: 'http://localhost:3002', // Replace with your Calculation Service URL
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
