@@ -112,6 +112,7 @@
     const fromCurrencySelect = document.getElementById("fromCurrency");
     const toCurrencySelect = document.getElementById("toCurrency");
 
+    // Populate currency dropdowns
     for (const [currency, code] of Object.entries(currencyList)) {
         let option = document.createElement("option");
         option.value = code;
@@ -124,16 +125,46 @@
         toCurrencySelect.add(option);
     }
 
+    // Function to handle currency conversion
     function convertCurrency() {
         let fromCurrency = document.getElementById("fromCurrency").value;
         let toCurrency = document.getElementById("toCurrency").value;
         let amount = document.getElementById("amount").value;
 
-        // Placeholder logic for conversion (implement actual logic as needed)
-        let conversionRate = 1; // Example: define your conversion rate logic here
-        let convertedAmount = amount * conversionRate;
+        // Validate amount
+        if (!amount || isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
 
-        document.getElementById("result").innerText = `Converted Amount: ${convertedAmount} ${toCurrency}`;
+        // Prepare data for POST request
+        const data = {
+            from: "USD",
+            to: "EUR",
+            amount: 100
+        };
+
+        // URL of the local API endpoint
+        const url = "http://localhost:3000/convert";
+
+        // Make POST request using fetch API
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response
+                console.log('Conversion result:', data);
+                document.getElementById("result").innerText = `Converted Amount: ${data.convertedAmount} ${toCurrency}`;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again later.");
+            });
     }
 </script>
 </body>
