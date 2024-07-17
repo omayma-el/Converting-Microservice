@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { Parser } from 'xml2js';
 import { format, subDays } from 'date-fns';
+import cors from 'cors'; // Import CORS middleware
 
 const app = express();
 const port = 3000;
@@ -44,6 +45,14 @@ async function fetchObsValue(currencyCode: string): Promise<number | undefined> 
 
 // Middleware to parse JSON in POST requests
 app.use(express.json());
+
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: 'http://localhost:3001', // Replace with your front-end URL
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+}));
 
 // GET /exchange-rate endpoint
 app.get('/exchange-rate', async (req: Request, res: Response) => {

@@ -16,6 +16,7 @@ const express_1 = __importDefault(require("express"));
 const axios_1 = __importDefault(require("axios"));
 const xml2js_1 = require("xml2js");
 const date_fns_1 = require("date-fns");
+const cors_1 = __importDefault(require("cors")); // Import CORS middleware
 const app = (0, express_1.default)();
 const port = 3000;
 // Calculate yesterday's date
@@ -52,6 +53,12 @@ function fetchObsValue(currencyCode) {
 }
 // Middleware to parse JSON in POST requests
 app.use(express_1.default.json());
+// Enable CORS for all routes
+app.use((0, cors_1.default)({
+    origin: 'http://localhost:3001', // Replace with your front-end URL
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+}));
 // GET /exchange-rate endpoint
 app.get('/exchange-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { from } = req.query;
