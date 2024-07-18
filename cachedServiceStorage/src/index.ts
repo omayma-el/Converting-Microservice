@@ -33,6 +33,9 @@ app.post('/cache', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Request body should be an array of key-value pairs with "key" and "value" properties' });
   }
 
+  // Add the EUR key with value 1 to the keyValuePairs array
+  keyValuePairs.push({ key: 'EUR', value: '1' });
+
   const operations = keyValuePairs.map(({ key, value }) => {
     return new Promise<void>((resolve, reject) => {
       memcached.set(key, value, 86400, (err) => { // 86 400 seconds = 24 hours
