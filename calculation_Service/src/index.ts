@@ -25,27 +25,37 @@ app.post('/calculation', async (req: Request, res: Response) => {
   const { from, to, amount } = req.body;
 
   if (!from || !to || !amount) {
-    return res.status(400).json({ error: 'Missing required fields in request body: "from", "to", "amount"' });
+    return res.status(400).json({ error: 'Missing required fields in request body: "from_currency", "to_currency", "amount"' });
   }
+
 
   try {
     // Make a GET request to the /exchange-rate endpoint
-    const exchangeRateResponse = await axios.get('http://localhost:3000/exchange-rate', {
+    const fromResponse = await axios.get('http://localhost:3003/exchange-rate-cache', {
       params: {
         from
       }
     });
 
-    // Check if exchangeRateResponse contains data
-    if (!exchangeRateResponse || !exchangeRateResponse.data) {
-      console.error('Exchange rate response missing data');
-      return res.status(404).json({ error: 'Exchange rate not found' });
+    const toResponse = await axios.get('http://localhost:3003/exchange-rate-cache', {
+      params: {
+        from : to
+      }
+    });
+
+    const rate_from = fromResponse.data.rate;
+    const rate_to = toResponse.data.rate;
+
+    // Ensure rates are valid numbers
+    if (rate_from === 0 || rate_to === 0) {
+      return res.status(400).json({ error: 'Invalid exchange rate received' });
     }
 
-    const { rate } = exchangeRateResponse.data;
+
+    const rate_ratio = rate_to / rate_from;
 
     // Calculate the converted amount
-    const convertedAmount = amount * rate;
+    const convertedAmount = amount * rate_ratio;
 
     // Respond with the conversion result
     return res.json({
@@ -53,7 +63,7 @@ app.post('/calculation', async (req: Request, res: Response) => {
       to,
       amount,
       convertedAmount,
-      exchangeRate: rate
+      exchangeRate: rate_ratio
     });
 
   } catch (error) {
@@ -61,6 +71,7 @@ app.post('/calculation', async (req: Request, res: Response) => {
     return res.status(500).send('Error converting currency');
   }
 });
+
 
 // Start the server
 app.listen(port, () => {
