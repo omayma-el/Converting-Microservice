@@ -2,10 +2,12 @@ import express, { Request, Response } from 'express';
 import axios from 'axios';
 import { Parser } from 'xml2js';
 import { format, subDays } from 'date-fns';
-import cors from 'cors'; // Import CORS middleware
+import cors from 'cors';
 
 const app = express();
 const port = 3005;
+
+// Initialize Memcached
 
 // Calculate yesterday's date
 const yesterday = subDays(new Date(), 1);
@@ -16,54 +18,20 @@ const parser = new Parser({ explicitArray: false });
 
 // List of acronyms
 const acronyms = [
-  "AUD",
-  "BRL",
-  "BGN",
-  "CAD",
-  "CNY",
-  "CZK",
-  "DKK",
-  "HKD",
-  "HUF",
-  "ISK",
-  "INR",
-  "IDR",
-  "ILS",
-  "JPY",
-  "KRW",
-  "MYR",
-  "MXN",
-  "NZD",
-  "NOK",
-  "PHP",
-  "PLN",
-  "RON",
-  "SGD",
-  "ZAR",
-  "CHF",
-  "THB",
-  "TRY",
-  "GBP",
-  "USD"
+  "AUD", "BRL", "BGN", "CAD", "CNY", "CZK", "DKK", "HKD", "HUF", "ISK", 
+  "INR", "IDR", "ILS", "JPY", "KRW", "MYR", "MXN", "NZD", "NOK", "PHP", 
+  "PLN", "RON", "SGD", "ZAR", "CHF", "THB", "TRY", "GBP", "USD"
 ];
 
 // Function to get the exchange rate from the ECB API
 async function fetchObsValue(currencyCode: string): Promise<number | undefined> {
   try {
     const response = await axios.get(`https://sdw-wsrest.ecb.europa.eu/service/data/EXR/D.${currencyCode}.EUR.SP00.A`, {
-      params: {
-        startPeriod: START_DATE
-      },
-      headers: {
-        'Accept': 'application/xml'
-      }
+      params: { startPeriod: START_DATE },
+      headers: { 'Accept': 'application/xml' }
     });
 
-    console.log('API response:', response.data); // Show the external API response in the console
-
     const result = await parser.parseStringPromise(response.data);
-    
-    // Extract the most recent value from generic:Obs > generic:ObsValue
     const series = result['message:GenericData']['message:DataSet']['generic:Series'];
     const observations = series['generic:Obs'];
     const mostRecentObs = Array.isArray(observations) ? observations[observations.length - 1] : observations;
@@ -71,7 +39,7 @@ async function fetchObsValue(currencyCode: string): Promise<number | undefined> 
 
     return parseFloat(obsValue);
   } catch (error) {
-    console.error('Error fetching exchange rate:', error);
+    console.error(`Error fetching exchange rate for ${currencyCode}:`, error);
     return undefined;
   }
 }
@@ -80,10 +48,7 @@ async function fetchObsValue(currencyCode: string): Promise<number | undefined> 
 async function fetchAllRates(): Promise<{ key: string, value: string }[]> {
   const rates = await Promise.all(acronyms.map(async (acronym) => {
     const rate = await fetchObsValue(acronym);
-    return {
-      key: acronym,
-      value: rate !== undefined ? rate.toString() : "N/A"
-    };
+    return { key: acronym, value: rate !== undefined ? rate.toString() : "N/A" };
   }));
 
   return rates;
@@ -94,11 +59,60 @@ app.use(express.json());
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: 'http://localhost:3002', // Replace with your Calculation Service URL
+  origin: 'http://localhost:3002',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
 
+// Endpoint to store rates in Memcached using the /cache API
+app.post('/store-rates-in-cache', async (_req: Request, res: Response) => {
+  try {
+    const rates = await fetchAllRates();
+    const keyValuePairs = rates.map(rate => ({ key: rate.key, value: rate.value }));
+
+    // Call the /cache API to store in Memcached
+    const response = await axios.post('http://localhost:3004/cache', keyValuePairs);
+
+    console.log('Rates stored in cache successfully:', response.data);
+    return res.status(200).json({ message: 'Rates stored in cache successfully' });
+  } catch (error) {
+    console.error('Error storing rates in cache:', error);
+    return res.status(500).json({ error: 'Error storing rates in cache', details: error });
+  }
+});
+
+// Function to periodically fetch and store rates in cache every 6 hours
+async function storeRatesInCachePeriodically() {
+  try {
+    // Initially fetch and store rates
+    await storeRatesInCache();
+
+    // Set interval to run every 6 hours (in milliseconds: 6 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+    setInterval(async () => {
+      await storeRatesInCache();
+    }, 6 * 60 * 60 * 1000);
+  } catch (error) {
+    console.error('Error storing rates in cache periodically:', error);
+  }
+}
+
+// Function to fetch rates and store in Memcached
+async function storeRatesInCache() {
+  try {
+    const rates = await fetchAllRates();
+    const keyValuePairs = rates.map(rate => ({ key: rate.key, value: rate.value }));
+
+    // Call the /cache API to store in Memcached
+    const response = await axios.post('http://localhost:3004/cache', keyValuePairs);
+
+    console.log('Rates stored in cache successfully:', response.data);
+  } catch (error) {
+    console.error('Error storing rates in cache:', error);
+  }
+}
+
+// Start periodic storing of rates in cache
+storeRatesInCachePeriodically();
 
 // GET /all-exchange-rates endpoint
 app.get('/all-exchange-rates', async (_req: Request, res: Response) => {
