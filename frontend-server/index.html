@@ -135,7 +135,8 @@
             .then(data => {
                 // Handle response
                 console.log('Conversion result:', data);
-                document.getElementById("result").innerText = `Converted Amount: ${data.convertedAmount} ${toCurrency}`;
+                const formattedAmount = data.convertedAmount.toFixed(3);
+                document.getElementById("result").innerText = `Converted Amount: ${formattedAmount} ${toCurrency}`;
             })
             .catch((error) => {
                 console.error('Error:', error);
