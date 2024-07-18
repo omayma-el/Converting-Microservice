@@ -70,21 +70,6 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type'],
 }));
-// Endpoint to store rates in Memcached using the /cache API
-app.post('/store-rates-in-cache', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const rates = yield fetchAllRates();
-        const keyValuePairs = rates.map(rate => ({ key: rate.key, value: rate.value }));
-        // Call the /cache API to store in Memcached
-        const response = yield axios_1.default.post('http://localhost:3004/cache', keyValuePairs);
-        console.log('Rates stored in cache successfully:', response.data);
-        return res.status(200).json({ message: 'Rates stored in cache successfully' });
-    }
-    catch (error) {
-        console.error('Error storing rates in cache:', error);
-        return res.status(500).json({ error: 'Error storing rates in cache', details: error });
-    }
-}));
 // Function to periodically fetch and store rates in cache every 6 hours
 function storeRatesInCachePeriodically() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -118,7 +103,8 @@ function storeRatesInCache() {
 }
 // Start periodic storing of rates in cache
 storeRatesInCachePeriodically();
-// GET /all-exchange-rates endpoint
+//GET /all-exchange-rates endpoint
+// For API tests
 app.get('/all-exchange-rates', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const rates = yield fetchAllRates();
