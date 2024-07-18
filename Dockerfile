@@ -46,9 +46,34 @@ COPY frontend-server/package*.json ./
 RUN npm install
 COPY frontend-server/ ./
 
-# Stage 7: Final stage
+# Stage 7: Final stage with Memcached installation
 FROM node:latest
 WORKDIR /usr/src/app
+
+# Install dependencies for building Memcached
+RUN apt-get update && apt-get install -y \
+    wget \
+    build-essential \
+    libevent-dev
+
+# Download and build libevent
+RUN wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz \
+    && tar xfz libevent-2.1.12-stable.tar.gz \
+    && cd libevent-2.1.12-stable \
+    && ./configure \
+    && make \
+    && make install
+
+# Download and build Memcached
+RUN wget https://memcached.org/files/memcached-1.6.17.tar.gz \
+    && tar xfz memcached-1.6.17.tar.gz \
+    && cd memcached-1.6.17 \
+    && ./configure \
+    && make \
+    && make install
+
+# Create memcache user
+RUN useradd -ms /bin/bash memcache
 
 # Copy built bankApi
 COPY --from=bankApiBuilder /usr/src/bankApi/build ./bankApi/build
@@ -79,7 +104,11 @@ COPY --from=getAllRatesBuilder /usr/src/getAllRates/package*.json ./getAllRates/
 COPY --from=frontendBuilder /usr/src/frontend-server ./frontend-server
 
 # Expose the necessary ports
-EXPOSE 3005 3002 3001
+EXPOSE 3005 3002 3001 11211
 
-# Command to run all services
-CMD ["sh", "-c", "node bankApi/build/index.js & node cachedServiceQuery/dist/index.js & node cachedServiceStorage/dist/index.js & node calculation_Service/dist/index.js & node getAllRates/build/index.js & node frontend-server/server.js"]
+# Create an entrypoint script to launch all services
+COPY entrypoint.sh /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+# Command to run the entrypoint script
+CMD ["/usr/src/app/entrypoint.sh"]
