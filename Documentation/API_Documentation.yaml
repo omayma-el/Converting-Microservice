@@ -2,56 +2,23 @@ openapi: 3.0.3
 info:
   title: Currency Conversion API
   description: API for converting currencies and retrieving exchange rates.
-  version: 1.0.0
+  version: 2.0.0
 servers:
   - description : Production
     url: 'https://yourcurrencyconverter-api.cz'
-  - description : Test
-    url: 'https://yourcurrencyconverter-api-test.cz'
 tags:
-  - name: Currency
-    description: Operations about currency conversion and exchange rates
+  - name: Calculation Service
+    description: Calculation of the amount based on currencies
+  - name: Cache Service
+    description: Operations about cache (Read / Write)
 paths:
-  /exchange-rate:
-    get:
-      tags:
-        - Currency
-      summary: Get exchange rate
-      description: Retrieves the exchange rate between two currencies
-      operationId: getExchangeRate
-      parameters:
-        - name: from
-          in: query
-          description: Currency code to convert from
-          required: true
-          schema:
-            type: string
-            example: USD
-        - name: to
-          in: query
-          description: Currency code to convert to
-          required: true
-          schema:
-            type: string
-            example: EUR
-      responses:
-        '200':
-          description: Successful retrieval
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExchangeRate'
-        '400':
-          description: Invalid input
-        '404':
-          description: Currency not found
-  /convert:
+  /calculation:
     post:
       tags:
-        - Currency
-      summary: Calculate currency
-      description: Calculate currency with given input array
-      operationId: calculateCurrencyWithListInput
+        - Calculation Service
+      summary: Convert amount
+      description: Convert the amount give to the currency asked
+      operationId: postConvertAmount
       requestBody:
         content:
           application/json:
@@ -65,10 +32,55 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversionResult'          
+                $ref: '#/components/schemas/ConversionResult'
             application/xml:
               schema:
                 $ref: '#/components/schemas/ConversionResult'
+        default:
+          description: successful operation
+  /exchange-rate-cache:
+    get:
+      tags:
+        - Cache Service
+      summary: Get exchange rate
+      description: Retrieves the exchange rate compare to EUR for the currency ask from the cache
+      operationId: getExchangeRate
+      parameters:
+        - name: from
+          in: query
+          description: Currency code to convert from
+          required: true
+          schema:
+            type: string
+            example: USD
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRate'
+        '400':
+          description: Invalid input
+        '404':
+          description: Currency not found
+  /cache:
+    post:
+      tags:
+        - Cache Service
+      summary: Write exchange rates
+      description: Write all the exchange rates of all available currencies
+      operationId: postAllCurrencies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ArrayExchangeRate'
+      responses:
+        '200':
+          description: Successful operation
         default:
           description: successful operation
 components:
@@ -103,9 +115,6 @@ components:
         amount:
           type: number
           example: 100.0
-        exchangeRate:
-          type: number
-          example: 0.85
     ExchangeRate:
       type: object
       properties:
@@ -118,12 +127,15 @@ components:
         rate:
           type: number
           example: 0.85
-    Exchange:
+    ArrayExchangeRate:
       type: object
       properties:
-        from:
-          type: string
-          example: USD
-        to:
-          type: string
-          example: EUR
+          from:
+            type: string
+            example: USD
+          to:
+            type: string
+            example: EUR
+          rate:
+            type: number
+            example: 0.85
