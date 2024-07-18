@@ -1,11 +1,3 @@
-# Stage 1: Build bankApi
-FROM node:latest AS bankApiBuilder
-WORKDIR /usr/src/bankApi
-COPY bankApi/package*.json ./
-RUN npm install
-RUN npm install cors
-COPY bankApi/ ./
-RUN npm run tsc
 
 # Stage 2: Build cachedServiceQuery
 FROM node:latest AS cachedServiceQueryBuilder
@@ -75,10 +67,7 @@ RUN wget https://memcached.org/files/memcached-1.6.17.tar.gz \
 # Create memcache user
 RUN useradd -ms /bin/bash memcache
 
-# Copy built bankApi
-COPY --from=bankApiBuilder /usr/src/bankApi/build ./bankApi/build
-COPY --from=bankApiBuilder /usr/src/bankApi/node_modules ./bankApi/node_modules
-COPY --from=bankApiBuilder /usr/src/bankApi/package*.json ./bankApi/
+
 
 # Copy built cachedServiceQuery
 COPY --from=cachedServiceQueryBuilder /usr/src/cachedServiceQuery/dist ./cachedServiceQuery/dist

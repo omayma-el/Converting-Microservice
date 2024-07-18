@@ -4,7 +4,6 @@
 memcached -u memcache -p 11211 &
 
 # Start the other services
-node bankApi/build/index.js &
 node cachedServiceQuery/dist/index.js &
 node cachedServiceStorage/dist/index.js &
 node calculation_Service/dist/index.js &
